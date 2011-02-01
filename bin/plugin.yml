@@ -1,0 +1,12 @@
+name: Whitelist
+main: com.bukkit.silence.whitelist.Whitelist
+version: 1.6
+commands:
+  whitelist:
+    description: All whitelist commands
+    usage: |
+      /<command> reload - reloads the whitelist and settings
+      /<command> add [player] - adds a player to the whitelist
+      /<command> remove [player] - removes a player from the whitelist
+      /<command> on|off - actives/deactivates whitelist
+      /<command> list - list whitelist entries

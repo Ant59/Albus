@@ -1,0 +1,9 @@
+name: SMHWhite
+main: com.bukkit.ant59.smfwhite.SMFWhite
+version: 1.0
+commands:
+  list:
+    description: List players on whitelist
+    usage: |        
+        Incorrect usage of command /<command>. Examples:
+           /<command> - List players on whitelist

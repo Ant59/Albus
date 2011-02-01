@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2011 <silence@immortal-forces.net>
  *
- * This file is part of the Bukkit plugin Whitelist.
+ * This file is part of the Bukkit plugin SMFWhite.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,45 +19,41 @@
  * MA 02111-1307, USA.
  */
 
-package com.bukkit.silence.whitelist;
+// Modifications Copyright (C) 2011 Antony <admin@districtmine.net>
+
+package com.bukkit.ant59.smfwhite;
 
 import java.io.File;
 import java.util.TimerTask;
-        
-public class FileWatcher extends TimerTask
-{
-  private File m_File;
-  private long m_LastModified;
-  private volatile  boolean m_WasChanged;
-  
-  FileWatcher(File file)
-  {
-    m_File = file;
-    m_LastModified = m_File.lastModified();
-  }
 
-  @Override
-  public void run()
-  {
-    if ( m_LastModified != m_File.lastModified() )
-    {
-      m_LastModified = m_File.lastModified();
-      if ( !m_WasChanged )
-      {
-        m_WasChanged = true;
-        System.out.println("Whitelist: Whitelist.txt was updated. Whitelist was scheduled for reloading.");
-      }
-    }
-  }
+public class FileWatcher extends TimerTask {
+	private File m_File;
+	private long m_LastModified;
+	private volatile boolean m_WasChanged;
 
-  public boolean wasFileModified()
-  {
-    return m_WasChanged;
-  }
+	FileWatcher() {
+		//m_File = file;
+		m_LastModified = m_File.lastModified();
+	}
 
-  public void resetFileModifiedState()
-  {
-    m_WasChanged = false;
-  }
+	@Override
+	public void run() {
+		if (m_LastModified != m_File.lastModified()) {
+			m_LastModified = m_File.lastModified();
+			if (!m_WasChanged) {
+				m_WasChanged = true;
+				System.out
+						.println("Whitelist: Whitelist.txt was updated. Whitelist was scheduled for reloading.");
+			}
+		}
+	}
+
+	public boolean wasFileModified() {
+		return m_WasChanged;
+	}
+
+	public void resetFileModifiedState() {
+		m_WasChanged = false;
+	}
 
 }
