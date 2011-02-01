@@ -161,7 +161,7 @@ public class SMFWhite extends JavaPlugin {
 		
 		// Start reloading timer
 		m_Timer = new Timer(true);
-		m_Timer.schedule(new ReloaderTask(), 0, 1000);
+		m_Timer.schedule(new ReloaderTask(), 0, 300000);
 
 		consoleLog("Enabled!");
 	}
