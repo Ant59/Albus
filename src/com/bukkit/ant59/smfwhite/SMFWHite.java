@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -62,17 +63,16 @@ public class SMFWhite extends JavaPlugin {
 	private final String PROP_MYSQL_DB = "mysql-db";
 	private final String PROP_MYSQL_PREFIX = "mysql-prefix";
 	private final String PROP_SMF_ALLOWED_GROUPS = "smf-groups";
-	//private final String FILE_WHITELIST = "whitelist.txt";
+	// private final String FILE_WHITELIST = "whitelist.txt";
 	private final String FILE_CONFIG = "whitelist.properties";
-    
+
 	// Plugin
-    private String name;
-    private String version;
-    private PluginDescriptionFile pdfFile;
+	private String name;
+	private String version;
+	private PluginDescriptionFile pdfFile;
 
 	// Attributes
 	private final WLPlayerListener m_PlayerListner = new WLPlayerListener(this);
-	private FileWatcher m_Watcher;
 	private Timer m_Timer;
 	private File m_Folder;
 	private ArrayList<String> m_WhitelistAdmins;
@@ -80,7 +80,7 @@ public class SMFWhite extends JavaPlugin {
 	private String m_KickMessage;
 	private boolean m_IsWhitelistActive;
 	private boolean m_IsListCommandDisabled;
-	
+
 	// Database
 	private MySQL sql;
 
@@ -116,21 +116,13 @@ public class SMFWhite extends JavaPlugin {
 			m_Folder.mkdir();
 			consoleLog("Folder created");
 		}
-		/*File fWhitelist = new File(m_Folder.getAbsolutePath() + File.separator
-				+ FILE_WHITELIST);
-		if (!fWhitelist.exists()) {
-			System.out.print("Whitelist: Whitelist is missing, creating...");
-			try {
-				fWhitelist.createNewFile();
-				System.out.println("done.");
-			} catch (IOException ex) {
-				System.out.println("failed.");
-			}
-		}*/
-		// Start file watcher
-		m_Watcher = new FileWatcher();
-		m_Timer = new Timer(true);
-		m_Timer.schedule(m_Watcher, 0, 1000);
+		/*
+		 * File fWhitelist = new File(m_Folder.getAbsolutePath() +
+		 * File.separator + FILE_WHITELIST); if (!fWhitelist.exists()) {
+		 * System.out.print("Whitelist: Whitelist is missing, creating..."); try
+		 * { fWhitelist.createNewFile(); System.out.println("done."); } catch
+		 * (IOException ex) { System.out.println("failed."); } }
+		 */
 
 		File fConfig = new File(m_Folder.getAbsolutePath() + File.separator
 				+ FILE_CONFIG);
@@ -139,8 +131,10 @@ public class SMFWhite extends JavaPlugin {
 			try {
 				fConfig.createNewFile();
 				Properties propConfig = new Properties();
-				propConfig.setProperty(PROP_KICKMESSAGE, "Sorry, you are not on the whitelist!");
-				propConfig.setProperty(PROP_WHITELIST_ADMINS, "Name1,Name2,Name3");
+				propConfig.setProperty(PROP_KICKMESSAGE,
+						"Sorry, you are not on the whitelist!");
+				propConfig.setProperty(PROP_WHITELIST_ADMINS,
+						"Name1,Name2,Name3");
 				propConfig.setProperty(PROP_DISABLE_LIST, "false");
 				propConfig.setProperty(PROP_MYSQL_HOST, "localhost");
 				propConfig.setProperty(PROP_MYSQL_PORT, "3306");
@@ -151,14 +145,24 @@ public class SMFWhite extends JavaPlugin {
 				propConfig.setProperty(PROP_SMF_ALLOWED_GROUPS, "1,2,3");
 				BufferedOutputStream stream = new BufferedOutputStream(
 						new FileOutputStream(fConfig.getAbsolutePath()));
-				propConfig.store(stream, "Auto generated config file, please modify");
+				propConfig.store(stream,
+						"Auto generated config file, please modify");
 				consoleLog("Config created");
 			} catch (IOException ex) {
 				consoleWarning("Failed to create config");
 			}
 		}
-		loadWhitelistSettings();
 		
+		class ReloaderTask extends TimerTask {
+	        public void run() {
+	        	loadWhitelistSettings();
+	        }
+	    }
+		
+		// Start reloading timer
+		m_Timer = new Timer(true);
+		m_Timer.schedule(new ReloaderTask(), 0, 1000);
+
 		consoleLog("Enabled!");
 	}
 
@@ -201,34 +205,6 @@ public class SMFWhite extends JavaPlugin {
 						+ "Could not reload whitelist...");
 			return true;
 		}
-		/*if (args[0].compareToIgnoreCase("add") == 0) {
-			if (args.length < 2) {
-				sender.sendMessage(ChatColor.RED
-						+ "Parameter missing: Player name");
-			} else {
-				if (addPlayerToWhitelist(args[1]))
-					sender.sendMessage(ChatColor.GREEN + "Player \"" + args[1]
-							+ "\" added");
-				else
-					sender.sendMessage(ChatColor.RED
-							+ "Could not add player \"" + args[1] + "\"");
-			}
-			return true;
-		}
-		if (args[0].compareToIgnoreCase("remove") == 0) {
-			if (args.length < 2) {
-				sender.sendMessage(ChatColor.RED
-						+ "Parameter missing: Player name");
-			} else {
-				if (removePlayerFromWhitelist(args[1]))
-					sender.sendMessage(ChatColor.GREEN + "Player \"" + args[1]
-							+ "\" removed");
-				else
-					sender.sendMessage(ChatColor.RED
-							+ "Could not remove player \"" + args[1] + "\"");
-			}
-			return true;
-		}*/
 		if (args[0].compareToIgnoreCase("on") == 0) {
 			setWhitelistActive(true);
 			sender.sendMessage(ChatColor.GREEN + "Whitelist activated!");
@@ -275,10 +251,9 @@ public class SMFWhite extends JavaPlugin {
 				m_IsListCommandDisabled = Boolean
 						.parseBoolean(rawDisableListCommand);
 			}
-			
+
 			// 2. Load database configuration and connect...
-			this.sql = new MySQL(this,
-					propConfig.getProperty(PROP_MYSQL_USER),
+			this.sql = new MySQL(this, propConfig.getProperty(PROP_MYSQL_USER),
 					propConfig.getProperty(PROP_MYSQL_PASS),
 					propConfig.getProperty(PROP_MYSQL_HOST),
 					propConfig.getProperty(PROP_MYSQL_PORT),
@@ -287,14 +262,17 @@ public class SMFWhite extends JavaPlugin {
 			// 3. Load whitelist from SMF database
 			m_WhitelistAllow.clear();
 
-	    	ResultSet rs;
-    		rs = sql.trySelect("select member_name from " + propConfig.getProperty(PROP_MYSQL_PREFIX) + "members where id_group IN(" + propConfig.getProperty(PROP_SMF_ALLOWED_GROUPS) + ")");
-    		
+			ResultSet rs;
+			rs = sql.trySelect("select member_name from "
+					+ propConfig.getProperty(PROP_MYSQL_PREFIX)
+					+ "members where id_group IN("
+					+ propConfig.getProperty(PROP_SMF_ALLOWED_GROUPS) + ")");
+
 			while (rs.next() != false) {
 				String user = rs.getString("member_name");
 				m_WhitelistAllow.add(user);
 			}
-			
+
 			consoleLog("Whitelist Loaded");
 		} catch (Exception ex) {
 			consoleWarning("Failed to load whitelist");
@@ -303,22 +281,14 @@ public class SMFWhite extends JavaPlugin {
 		return true;
 	}
 
-	/*public boolean saveWhitelist() {
-		try {
-			BufferedWriter writer = new BufferedWriter(
-					new FileWriter(
-							(m_Folder.getAbsolutePath() + File.separator + FILE_WHITELIST)));
-			for (String player : m_WhitelistAllow) {
-				writer.write(player);
-				writer.newLine();
-			}
-			writer.close();
-		} catch (Exception ex) {
-			consoleWarning(ex.getMessage());
-			return false;
-		}
-		return true;
-	}*/
+	/*
+	 * public boolean saveWhitelist() { try { BufferedWriter writer = new
+	 * BufferedWriter( new FileWriter( (m_Folder.getAbsolutePath() +
+	 * File.separator + FILE_WHITELIST))); for (String player :
+	 * m_WhitelistAllow) { writer.write(player); writer.newLine(); }
+	 * writer.close(); } catch (Exception ex) { consoleWarning(ex.getMessage());
+	 * return false; } return true; }
+	 */
 
 	public boolean isAdmin(String playerName) {
 		for (String admin : m_WhitelistAdmins) {
@@ -338,23 +308,16 @@ public class SMFWhite extends JavaPlugin {
 		return false;
 	}
 
-	/*public boolean addPlayerToWhitelist(String playerName) {
-		if (!isOnWhitelist(playerName)) {
-			m_WhitelistAllow.add(playerName);
-			return saveWhitelist();
-		}
-		return false;
-	}
-
-	public boolean removePlayerFromWhitelist(String playerName) {
-		for (int i = 0; i < m_WhitelistAllow.size(); i++) {
-			if (playerName.compareToIgnoreCase(m_WhitelistAllow.get(i)) == 0) {
-				m_WhitelistAllow.remove(i);
-				return saveWhitelist();
-			}
-		}
-		return false;
-	}*/
+	/*
+	 * public boolean addPlayerToWhitelist(String playerName) { if
+	 * (!isOnWhitelist(playerName)) { m_WhitelistAllow.add(playerName); return
+	 * saveWhitelist(); } return false; }
+	 * 
+	 * public boolean removePlayerFromWhitelist(String playerName) { for (int i
+	 * = 0; i < m_WhitelistAllow.size(); i++) { if
+	 * (playerName.compareToIgnoreCase(m_WhitelistAllow.get(i)) == 0) {
+	 * m_WhitelistAllow.remove(i); return saveWhitelist(); } } return false; }
+	 */
 
 	public boolean reloadSettings() {
 		return loadWhitelistSettings();
@@ -387,7 +350,7 @@ public class SMFWhite extends JavaPlugin {
 		return m_IsListCommandDisabled;
 	}
 
-	public boolean needReloadWhitelist() {
+	/*public boolean needReloadWhitelist() {
 		if (m_Watcher != null)
 			return m_Watcher.wasFileModified();
 		return false;
@@ -396,7 +359,7 @@ public class SMFWhite extends JavaPlugin {
 	public void resetNeedReloadWhitelist() {
 		if (m_Watcher != null)
 			m_Watcher.resetFileModifiedState();
-	}
+	}*/
 
 	public void consoleLog(String msg) {
 		log.info("[" + name + "] v" + version + " - " + msg);

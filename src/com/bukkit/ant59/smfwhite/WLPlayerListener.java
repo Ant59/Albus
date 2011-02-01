@@ -38,20 +38,18 @@ public class WLPlayerListener extends PlayerListener {
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		if (m_Plugin.isWhitelistActive()) {
 			// Check if whitelist.txt needs to be reloaded
-			if (m_Plugin.needReloadWhitelist()) {
+			/*if (m_Plugin.needReloadWhitelist()) {
 				System.out
 						.println("Whitelist: Executing scheduled whitelist reload.");
 				m_Plugin.reloadSettings();
 				m_Plugin.resetNeedReloadWhitelist();
-			}
+			}*/
 
 			String playerName = event.getPlayer().getName();
-			System.out.print("Whitelist: Player " + playerName
-					+ " is trying to join...");
 			if (m_Plugin.isOnWhitelist(playerName)) {
-				System.out.println("allow!");
+				m_Plugin.consoleLog(playerName + " tried to join and was allowed.");
 			} else {
-				System.out.println("kick!");
+				m_Plugin.consoleLog(playerName + " tried to join and was kicked.");
 				event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
 						m_Plugin.getKickMessage());
 			}

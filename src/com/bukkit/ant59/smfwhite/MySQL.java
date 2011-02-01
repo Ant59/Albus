@@ -38,7 +38,8 @@ public class MySQL {
 	private String MySQLUser, MySQLPass, MySQLHost, MySQLPort, MySQLDataBase,
 			MySQLURL;
 
-	public MySQL(SMFWhite instance, String user, String pass, String host, String port, String db) {
+	public MySQL(SMFWhite instance, String user, String pass, String host,
+			String port, String db) {
 		m_Plugin = instance;
 		m_Plugin.consoleLog("Running database connection...");
 		try {
@@ -47,7 +48,8 @@ public class MySQL {
 			MySQLHost = host;
 			MySQLPort = port;
 			MySQLDataBase = db;
-			MySQLURL = "jdbc:mysql://" + MySQLHost + ":" + MySQLPort + "/" + MySQLDataBase;
+			MySQLURL = "jdbc:mysql://" + MySQLHost + ":" + MySQLPort + "/"
+					+ MySQLDataBase;
 			Class.forName("com.mysql.jdbc.Driver");
 			MySQLConnection = DriverManager.getConnection(MySQLURL, MySQLUser,
 					MySQLPass);
