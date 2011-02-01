@@ -25,14 +25,11 @@ package com.bukkit.ant59.smfwhite;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
@@ -50,7 +47,7 @@ import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
-public class SMFWHite extends JavaPlugin {
+public class SMFWhite extends JavaPlugin {
 	// Logger
 	public static final Logger log = Logger.getLogger("Minecraft"); // Logger
 
@@ -65,7 +62,7 @@ public class SMFWHite extends JavaPlugin {
 	private final String PROP_MYSQL_DB = "mysql-db";
 	private final String PROP_MYSQL_PREFIX = "mysql-prefix";
 	private final String PROP_SMF_ALLOWED_GROUPS = "smf-groups";
-	private final String FILE_WHITELIST = "whitelist.txt";
+	//private final String FILE_WHITELIST = "whitelist.txt";
 	private final String FILE_CONFIG = "whitelist.properties";
     
 	// Plugin
@@ -83,8 +80,11 @@ public class SMFWHite extends JavaPlugin {
 	private String m_KickMessage;
 	private boolean m_IsWhitelistActive;
 	private boolean m_IsListCommandDisabled;
+	
+	// Database
+	private MySQL sql;
 
-	public SMFWHite(PluginLoader pluginLoader, Server instance,
+	public SMFWhite(PluginLoader pluginLoader, Server instance,
 			PluginDescriptionFile desc, File folder, File plugin,
 			ClassLoader cLoader) {
 		super(pluginLoader, instance, desc, folder, plugin, cLoader);
@@ -251,19 +251,7 @@ public class SMFWHite extends JavaPlugin {
 	public boolean loadWhitelistSettings() {
 		consoleLog("Trying to load whitelist and settings...");
 		try {
-			// 1. Load whitelist.txt
-			/*m_WhitelistAllow.clear();
-			BufferedReader reader = new BufferedReader(
-					new FileReader(
-							(m_Folder.getAbsolutePath() + File.separator + FILE_WHITELIST)));
-			String line = reader.readLine();
-			while (line != null) {
-				m_WhitelistAllow.add(line);
-				line = reader.readLine();
-			}
-			reader.close();*/
-
-			// 2. Load fWhitelist.properties
+			// 1. Load fWhitelist.properties
 			Properties propConfig = new Properties();
 			BufferedInputStream stream = new BufferedInputStream(
 					new FileInputStream(m_Folder.getAbsolutePath()
@@ -287,6 +275,26 @@ public class SMFWHite extends JavaPlugin {
 				m_IsListCommandDisabled = Boolean
 						.parseBoolean(rawDisableListCommand);
 			}
+			
+			// 2. Load database configuration and connect...
+			this.sql = new MySQL(this,
+					propConfig.getProperty(PROP_MYSQL_USER),
+					propConfig.getProperty(PROP_MYSQL_PASS),
+					propConfig.getProperty(PROP_MYSQL_HOST),
+					propConfig.getProperty(PROP_MYSQL_PORT),
+					propConfig.getProperty(PROP_MYSQL_DB));
+
+			// 3. Load whitelist from SMF database
+			m_WhitelistAllow.clear();
+
+	    	ResultSet rs;
+    		rs = sql.trySelect("select member_name from " + propConfig.getProperty(PROP_MYSQL_PREFIX) + "members where id_group IN(" + propConfig.getProperty(PROP_SMF_ALLOWED_GROUPS) + ")");
+    		
+			while (rs.next() != false) {
+				String user = rs.getString("member_name");
+				m_WhitelistAllow.add(user);
+			}
+			
 			consoleLog("Whitelist Loaded");
 		} catch (Exception ex) {
 			consoleWarning("Failed to load whitelist");
@@ -295,7 +303,7 @@ public class SMFWHite extends JavaPlugin {
 		return true;
 	}
 
-	public boolean saveWhitelist() {
+	/*public boolean saveWhitelist() {
 		try {
 			BufferedWriter writer = new BufferedWriter(
 					new FileWriter(
@@ -310,7 +318,7 @@ public class SMFWHite extends JavaPlugin {
 			return false;
 		}
 		return true;
-	}
+	}*/
 
 	public boolean isAdmin(String playerName) {
 		for (String admin : m_WhitelistAdmins) {
@@ -330,7 +338,7 @@ public class SMFWHite extends JavaPlugin {
 		return false;
 	}
 
-	public boolean addPlayerToWhitelist(String playerName) {
+	/*public boolean addPlayerToWhitelist(String playerName) {
 		if (!isOnWhitelist(playerName)) {
 			m_WhitelistAllow.add(playerName);
 			return saveWhitelist();
@@ -346,7 +354,7 @@ public class SMFWHite extends JavaPlugin {
 			}
 		}
 		return false;
-	}
+	}*/
 
 	public boolean reloadSettings() {
 		return loadWhitelistSettings();

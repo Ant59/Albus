@@ -28,9 +28,9 @@ import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerLoginEvent;
 
 public class WLPlayerListener extends PlayerListener {
-	private final SMFWHite m_Plugin;
+	private final SMFWhite m_Plugin;
 
-	public WLPlayerListener(SMFWHite instance) {
+	public WLPlayerListener(SMFWhite instance) {
 		m_Plugin = instance;
 	}
 

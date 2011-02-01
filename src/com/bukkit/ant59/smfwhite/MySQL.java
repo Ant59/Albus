@@ -25,12 +25,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.logging.Logger;
 
 import com.mysql.jdbc.Driver;
 
 public class MySQL {
-	private final SMFWHite m_Plugin;
+	private final SMFWhite m_Plugin;
 
 	private Connection MySQLConnection;
 	private Statement MySQLStatement;
@@ -39,22 +38,16 @@ public class MySQL {
 	private String MySQLUser, MySQLPass, MySQLHost, MySQLPort, MySQLDataBase,
 			MySQLURL;
 
-	public MySQL(SMFWHite instance) {
+	public MySQL(SMFWhite instance, String user, String pass, String host, String port, String db) {
 		m_Plugin = instance;
-		System.out.println("Whitelist: Executing scheduled whitelist reload.");
+		m_Plugin.consoleLog("Running database connection...");
 		try {
-			MySQLUser = Settings.getSetting("settings/kapital.ini",
-					"mysql_user", "root")[0];
-			MySQLPass = Settings.getSetting("settings/kapital.ini",
-					"mysql_pass", "passwd")[0];
-			MySQLHost = Settings.getSetting("settings/kapital.ini",
-					"mysql_host", "localhost")[0];
-			MySQLPort = Settings.getSetting("settings/kapital.ini",
-					"mysql_port", "3306")[0];
-			MySQLDataBase = Settings.getSetting("settings/kapital.ini",
-					"mysql_db", "minecraft")[0];
-			MySQLURL = "jdbc:mysql://" + MySQLHost + ":" + MySQLPort + "/"
-					+ MySQLDataBase;
+			MySQLUser = user;
+			MySQLPass = pass;
+			MySQLHost = host;
+			MySQLPort = port;
+			MySQLDataBase = db;
+			MySQLURL = "jdbc:mysql://" + MySQLHost + ":" + MySQLPort + "/" + MySQLDataBase;
 			Class.forName("com.mysql.jdbc.Driver");
 			MySQLConnection = DriverManager.getConnection(MySQLURL, MySQLUser,
 					MySQLPass);
