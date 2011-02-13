@@ -1,0 +1,10 @@
+name: Albus
+main: net.districtmine.ant59.albus
+version: 2.0
+commands:
+  whitelist:
+    description: All whitelist commands
+    usage: |
+      /<command> reload - reloads the whitelist and settings
+      /<command> on|off - actives/deactivates whitelist
+      /<command> list - list whitelist entries
