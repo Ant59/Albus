@@ -24,13 +24,11 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.PluginManager;
 
 public class Albus extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
 	
 	private final String PROP_KICKMESSAGE = "kick-message";
-	private final String PROP_WHITELIST_ADMINS = "whitelist-admins";
 	private final String PROP_DISABLE_LIST = "disable-list-command";
 	private final String PROP_MYSQL_HOST = "mysql-host";
 	private final String PROP_MYSQL_PORT = "mysql-port";
@@ -41,7 +39,7 @@ public class Albus extends JavaPlugin {
 	private final String PROP_GROUP_FIELD = "group-field";
 	private final String PROP_USERNAME_FIELD = "username-field";
 	private final String PROP_ALLOWED_GROUP_IDS = "allowed-group-ids";
-	private final String PROP_RELOAD_PERIOD = "reload-period";
+	//private final String PROP_RELOAD_PERIOD = "reload-period";
 	private final String configurationFile = "albus.properties";
 
 	// Plugin
@@ -55,7 +53,6 @@ public class Albus extends JavaPlugin {
 	private File albusFolder;
 	private ArrayList<String> allowed;
 	private String kickMessage;
-	private boolean m_IsWhitelistActive;
 	private boolean isActive;
 
 	// Database
@@ -67,15 +64,8 @@ public class Albus extends JavaPlugin {
 		albusFolder = folder;
 		kickMessage = "";
 		allowed = new ArrayList<String>();
-		m_IsWhitelistActive = true;
-		isActive = false;
+		isActive = true;
 	}
-
-	class ReloaderTask extends TimerTask {
-        public void run() {
-        	loadWhitelistSettings();
-        }
-    }
 
 	public void onEnable() {
 		getServer().getPluginManager().registerEvent(Event.Type.PLAYER_LOGIN, playerListner, Priority.Low, this);
@@ -98,8 +88,7 @@ public class Albus extends JavaPlugin {
 			try {
 				fConfig.createNewFile();
 				Properties propConfig = new Properties();
-				propConfig.setProperty(PROP_KICKMESSAGE, "Sorry, you are not on the whitelist!");
-				propConfig.setProperty(PROP_WHITELIST_ADMINS, "Name1,Name2,Name3");
+				propConfig.setProperty(PROP_KICKMESSAGE, "You are not on the whitelist!");
 				propConfig.setProperty(PROP_DISABLE_LIST, "false");
 				propConfig.setProperty(PROP_MYSQL_HOST, "localhost");
 				propConfig.setProperty(PROP_MYSQL_PORT, "3306");
@@ -110,7 +99,7 @@ public class Albus extends JavaPlugin {
 				propConfig.setProperty(PROP_GROUP_FIELD, "group_id");
 				propConfig.setProperty(PROP_USERNAME_FIELD, "name");
 				propConfig.setProperty(PROP_ALLOWED_GROUP_IDS, "1,2,3");
-				propConfig.setProperty(PROP_RELOAD_PERIOD, "300");
+				//propConfig.setProperty(PROP_RELOAD_PERIOD, "300");
 				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(fConfig.getAbsolutePath()));
 				propConfig.store(stream, "Automatically generated config file");
 				consoleLog("Configuration created");
@@ -118,6 +107,13 @@ public class Albus extends JavaPlugin {
 				consoleWarning("Configuration file creation failure");
 			}
 		}
+
+		class ReloaderTask extends TimerTask {
+	        public void run() {
+	        	loadWhitelistSettings();
+	        }
+	    }
+		timer.schedule(new ReloaderTask(), 0, 300000);
 
 		consoleLog("Enabled!");
 	}
@@ -161,15 +157,13 @@ public class Albus extends JavaPlugin {
 			Properties propConfig = new Properties();
 			BufferedInputStream stream = new BufferedInputStream(new FileInputStream(albusFolder.getAbsolutePath() + File.separator + configurationFile));
 			propConfig.load(stream);
-			timer.schedule(new ReloaderTask(), 0, Integer.parseInt(propConfig.getProperty(PROP_RELOAD_PERIOD))*1000);
 			kickMessage = propConfig.getProperty(PROP_KICKMESSAGE);
 			if (kickMessage == null) {
 				kickMessage = "";
 			}
 			String rawDisableListCommand = propConfig.getProperty(PROP_DISABLE_LIST);
 			if (rawDisableListCommand != null) {
-				isActive = Boolean
-						.parseBoolean(rawDisableListCommand);
+				isActive = Boolean.parseBoolean(rawDisableListCommand);
 			}
 
 			// Load database configuration and connect...
@@ -183,7 +177,7 @@ public class Albus extends JavaPlugin {
 			allowed.clear();
 
 			ResultSet rs;
-			rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " from " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_USERNAME_FIELD) + " IN(" + propConfig.getProperty(PROP_ALLOWED_GROUP_IDS) + ")");
+			rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " FROM " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_GROUP_FIELD) + " IN(" + propConfig.getProperty(PROP_ALLOWED_GROUP_IDS) + ")");
 			while (rs.next() != false) {
 				String user = rs.getString(propConfig.getProperty(PROP_USERNAME_FIELD));
 				allowed.add(user);
@@ -222,11 +216,11 @@ public class Albus extends JavaPlugin {
 	}
 
 	public boolean isWhitelistActive() {
-		return m_IsWhitelistActive;
+		return isActive;
 	}
 
 	public void setWhitelistActive(boolean isWhitelistActive) {
-		m_IsWhitelistActive = isWhitelistActive;
+		isActive = isWhitelistActive;
 	}
 
 	public boolean isListCommandDisabled() {

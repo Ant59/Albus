@@ -10,7 +10,7 @@ import java.sql.Statement;
 import com.mysql.jdbc.Driver;
 
 public class MySQL {
-	private final Albus m_Plugin;
+	private final Albus plugin;
 
 	private Connection MySQLConnection;
 	private Statement MySQLStatement;
@@ -20,8 +20,8 @@ public class MySQL {
 
 	public MySQL(Albus instance, String user, String pass, String host,
 			String port, String db) {
-		m_Plugin = instance;
-		m_Plugin.consoleLog("Running database connection...");
+		plugin = instance;
+		plugin.consoleLog("Running database connection...");
 		try {
 			MySQLUser = user;
 			MySQLPass = pass;
@@ -36,7 +36,7 @@ public class MySQL {
 			MySQLStatement = MySQLConnection.createStatement();
 			MySQLConnection.setAutoCommit(true);
 		} catch (Exception e) {
-			m_Plugin.consoleWarning("MySQL connection failed: " + e.toString());
+			plugin.consoleWarning("MySQL connection failed: " + e.toString());
 		} finally {
 		}
 	}
@@ -53,9 +53,9 @@ public class MySQL {
 		try {
 			getStatement().executeUpdate(sqlString);
 		} catch (Exception e) {
-			m_Plugin.consoleWarning("The following statement failed: "
+			plugin.consoleWarning("The following statement failed: "
 					+ sqlString);
-			m_Plugin.consoleWarning("Statement failed: " + e.toString());
+			plugin.consoleWarning("Statement failed: " + e.toString());
 		} finally {
 		}
 	}
@@ -65,9 +65,9 @@ public class MySQL {
 			System.out.println(getStatement().toString());
 			return getStatement().executeQuery(sqlString);
 		} catch (Exception e) {
-			m_Plugin.consoleWarning("The following statement failed: "
+			plugin.consoleWarning("The following statement failed: "
 					+ sqlString);
-			m_Plugin.consoleWarning("Statement failed: " + e.toString());
+			plugin.consoleWarning("Statement failed: " + e.toString());
 		} finally {
 		}
 		return null;
