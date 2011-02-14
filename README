@@ -1,5 +1,6 @@
-== SMFWhite ==
+ALBUS
 
-A whitelist plugin for Bukkit, based on Whitelist by Silence.
+Albus is a simple group-based whitelisting system made for Bukkit to work from member grouping in forum engines.
 
-Allows link to SimpleMachines Forum subscriptions for whitelisting.
+More info:
+http://forums.bukkit.org/threads/admn-albus-v2-0-formerly-smfwhite-use-forum-grouping-to-control-whitelist-via-mysql.3110/
