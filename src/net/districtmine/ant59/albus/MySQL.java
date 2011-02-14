@@ -16,8 +16,7 @@ public class MySQL {
 	private Statement MySQLStatement;
 	@SuppressWarnings("unused")
 	private Driver MySQLDriver;
-	private String MySQLUser, MySQLPass, MySQLHost, MySQLPort, MySQLDataBase,
-			MySQLURL;
+	private String MySQLUser, MySQLPass, MySQLHost, MySQLPort, MySQLDataBase, MySQLURL;
 
 	public MySQL(Albus instance, String user, String pass, String host,
 			String port, String db) {

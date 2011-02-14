@@ -61,9 +61,7 @@ public class Albus extends JavaPlugin {
 	// Database
 	private MySQL sql;
 
-	public Albus(PluginLoader pluginLoader, Server instance,
-			PluginDescriptionFile desc, File folder, File plugin,
-			ClassLoader cLoader) {
+	public Albus(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
 		super(pluginLoader, instance, desc, folder, plugin, cLoader);
 
 		albusFolder = folder;
