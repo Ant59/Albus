@@ -2,7 +2,6 @@
 
 package net.districtmine.ant59.albus;
 
-//import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerLoginEvent;
 
@@ -15,7 +14,7 @@ public class AlbusListener extends PlayerListener {
 
 	@Override
 	public void onPlayerLogin(PlayerLoginEvent event) {
-		if (plugin.isWhitelistActive()) {
+		//if (plugin.isWhitelistActive()) {
 			String playerName = event.getPlayer().getName();
 			if (plugin.isOnWhitelist(playerName)) {
 				plugin.consoleLog(playerName + " tried to join and was allowed.");
@@ -23,6 +22,6 @@ public class AlbusListener extends PlayerListener {
 				plugin.consoleLog(playerName + " tried to join and was kicked.");
 				event.disallow(PlayerLoginEvent.Result.KICK_OTHER, plugin.getKickMessage());
 			}
-		}
+		//}
 	}
 }

@@ -29,7 +29,6 @@ public class Albus extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
 	
 	private final String PROP_KICKMESSAGE = "kick-message";
-	private final String PROP_DISABLE_LIST = "disable-list-command";
 	private final String PROP_MYSQL_HOST = "mysql-host";
 	private final String PROP_MYSQL_PORT = "mysql-port";
 	private final String PROP_MYSQL_USER = "mysql-user";
@@ -53,7 +52,6 @@ public class Albus extends JavaPlugin {
 	private File albusFolder;
 	private ArrayList<String> allowed;
 	private String kickMessage;
-	private boolean isActive;
 
 	// Database
 	private MySQL sql;
@@ -64,7 +62,6 @@ public class Albus extends JavaPlugin {
 		albusFolder = folder;
 		kickMessage = "";
 		allowed = new ArrayList<String>();
-		isActive = true;
 	}
 
 	public void onEnable() {
@@ -89,7 +86,6 @@ public class Albus extends JavaPlugin {
 				fConfig.createNewFile();
 				Properties propConfig = new Properties();
 				propConfig.setProperty(PROP_KICKMESSAGE, "You are not on the whitelist!");
-				propConfig.setProperty(PROP_DISABLE_LIST, "false");
 				propConfig.setProperty(PROP_MYSQL_HOST, "localhost");
 				propConfig.setProperty(PROP_MYSQL_PORT, "3306");
 				propConfig.setProperty(PROP_MYSQL_USER, "user");
@@ -143,7 +139,7 @@ public class Albus extends JavaPlugin {
 				sender.sendMessage(ChatColor.RED + "Could not reload...");
 			return true;
 		}
-		if (args[0].compareToIgnoreCase("list") == 0 && !isListCommandDisabled()) {
+		if (args[0].compareToIgnoreCase("list") == 0) {
 			sender.sendMessage(ChatColor.YELLOW + "Allowed players: " + ChatColor.GRAY + getFormatedAllowList());
 			return true;
 		}
@@ -160,10 +156,6 @@ public class Albus extends JavaPlugin {
 			kickMessage = propConfig.getProperty(PROP_KICKMESSAGE);
 			if (kickMessage == null) {
 				kickMessage = "";
-			}
-			String rawDisableListCommand = propConfig.getProperty(PROP_DISABLE_LIST);
-			if (rawDisableListCommand != null) {
-				isActive = Boolean.parseBoolean(rawDisableListCommand);
 			}
 
 			// Load database configuration and connect...
@@ -213,18 +205,6 @@ public class Albus extends JavaPlugin {
 			result += player;
 		}
 		return result;
-	}
-
-	public boolean isWhitelistActive() {
-		return isActive;
-	}
-
-	public void setWhitelistActive(boolean isWhitelistActive) {
-		isActive = isWhitelistActive;
-	}
-
-	public boolean isListCommandDisabled() {
-		return isActive;
 	}
 
 	public void consoleLog(String msg) {
