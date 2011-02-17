@@ -169,7 +169,7 @@ public class Albus extends JavaPlugin {
 			allowed.clear();
 
 			ResultSet rs;
-			rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " FROM " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_GROUP_FIELD) + " IN(" + propConfig.getProperty(PROP_ALLOWED_GROUP_IDS) + ")");
+			rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " FROM " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_GROUP_FIELD) + " IN(" + propConfig.getProperty(PROP_ALLOWED_GROUP_IDS) + ") AND " + propConfig.getProperty(PROP_USERNAME_FIELD) + " != \"\"");
 			while (rs.next() != false) {
 				String user = rs.getString(propConfig.getProperty(PROP_USERNAME_FIELD));
 				allowed.add(user);
