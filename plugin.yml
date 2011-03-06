@@ -1,6 +1,6 @@
 name: Albus
 main: net.districtmine.ant59.albus.Albus
-version: 2.1
+version: 3.0
 commands:
   albus:
     description: Albus commands

@@ -20,7 +20,11 @@ public class AlbusListener extends PlayerListener {
 				plugin.consoleLog(playerName + " tried to join and was allowed.");
 			} else {
 				plugin.consoleLog(playerName + " tried to join and was kicked.");
-				event.disallow(PlayerLoginEvent.Result.KICK_OTHER, plugin.getKickMessage());
+				if (plugin.isRegistered(playerName)) {
+					event.disallow(PlayerLoginEvent.Result.KICK_OTHER, plugin.getKickMessageRegistered());
+				} else {
+					event.disallow(PlayerLoginEvent.Result.KICK_OTHER, plugin.getKickMessage());
+				}
 			}
 		//}
 	}

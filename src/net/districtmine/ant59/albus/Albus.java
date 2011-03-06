@@ -16,19 +16,18 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Albus extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
-	
+
 	private final String PROP_KICKMESSAGE = "kick-message";
+	private final String PROP_KICKMESSAGE_REGISTERED = "kick-message-registered";
 	private final String PROP_MYSQL_HOST = "mysql-host";
 	private final String PROP_MYSQL_PORT = "mysql-port";
 	private final String PROP_MYSQL_USER = "mysql-user";
@@ -38,7 +37,6 @@ public class Albus extends JavaPlugin {
 	private final String PROP_GROUP_FIELD = "group-field";
 	private final String PROP_USERNAME_FIELD = "username-field";
 	private final String PROP_ALLOWED_GROUP_IDS = "allowed-group-ids";
-	//private final String PROP_RELOAD_PERIOD = "reload-period";
 	private final String configurationFile = "albus.properties";
 
 	// Plugin
@@ -51,22 +49,20 @@ public class Albus extends JavaPlugin {
 	private Timer timer = new Timer(true);
 	private File albusFolder;
 	private ArrayList<String> allowed;
+	private ArrayList<String> registered;
 	private String kickMessage;
+	private String kickMessageRegistered;
 
 	// Database
 	private MySQL sql;
 
-	public Albus(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
-		super(pluginLoader, instance, desc, folder, plugin, cLoader);
-
-		albusFolder = folder;
+	public void onEnable() {
+		albusFolder = this.getDataFolder();
 		kickMessage = "";
 		allowed = new ArrayList<String>();
-	}
-
-	public void onEnable() {
+		registered = new ArrayList<String>();
+		
 		getServer().getPluginManager().registerEvent(Event.Type.PLAYER_LOGIN, playerListner, Priority.Low, this);
-		getServer().getPluginManager().registerEvent(Event.Type.PLAYER_COMMAND, playerListner, Priority.Monitor, this);
 
 		this.pdfFile = this.getDescription();
 		this.name = this.pdfFile.getName();
@@ -85,7 +81,8 @@ public class Albus extends JavaPlugin {
 			try {
 				fConfig.createNewFile();
 				Properties propConfig = new Properties();
-				propConfig.setProperty(PROP_KICKMESSAGE, "You are not on the whitelist!");
+				propConfig.setProperty(PROP_KICKMESSAGE, "You are not on the whitelist nor registered on the forum!");
+				propConfig.setProperty(PROP_KICKMESSAGE_REGISTERED, "You are registered on the forum but not whitelisted!");
 				propConfig.setProperty(PROP_MYSQL_HOST, "localhost");
 				propConfig.setProperty(PROP_MYSQL_PORT, "3306");
 				propConfig.setProperty(PROP_MYSQL_USER, "user");
@@ -95,7 +92,6 @@ public class Albus extends JavaPlugin {
 				propConfig.setProperty(PROP_GROUP_FIELD, "group_id");
 				propConfig.setProperty(PROP_USERNAME_FIELD, "name");
 				propConfig.setProperty(PROP_ALLOWED_GROUP_IDS, "1,2,3");
-				//propConfig.setProperty(PROP_RELOAD_PERIOD, "300");
 				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(fConfig.getAbsolutePath()));
 				propConfig.store(stream, "Automatically generated config file");
 				consoleLog("Configuration created");
@@ -157,6 +153,10 @@ public class Albus extends JavaPlugin {
 			if (kickMessage == null) {
 				kickMessage = "";
 			}
+			kickMessageRegistered = propConfig.getProperty(PROP_KICKMESSAGE);
+			if (kickMessageRegistered == null) {
+				kickMessageRegistered = "";
+			}
 
 			// Load database configuration and connect...
 			this.sql = new MySQL(this, propConfig.getProperty(PROP_MYSQL_USER),
@@ -167,12 +167,21 @@ public class Albus extends JavaPlugin {
 
 			// Load whitelist from database
 			allowed.clear();
+			registered.clear();
 
 			ResultSet rs;
 			rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " FROM " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_GROUP_FIELD) + " IN(" + propConfig.getProperty(PROP_ALLOWED_GROUP_IDS) + ") AND " + propConfig.getProperty(PROP_USERNAME_FIELD) + " != \"\"");
 			while (rs.next() != false) {
 				String user = rs.getString(propConfig.getProperty(PROP_USERNAME_FIELD));
 				allowed.add(user);
+			}
+			
+			if (kickMessageRegistered == "") {
+				rs = sql.trySelect("SELECT " + propConfig.getProperty(PROP_USERNAME_FIELD) + " FROM " + propConfig.getProperty(PROP_MYSQL_USERS_TABLE) + " WHERE " + propConfig.getProperty(PROP_USERNAME_FIELD) + " != \"\"");
+				while (rs.next() != false) {
+					String user = rs.getString(propConfig.getProperty(PROP_USERNAME_FIELD));
+					registered.add(user);
+				}
 			}
 
 			consoleLog("Whitelist Loaded");
@@ -192,8 +201,21 @@ public class Albus extends JavaPlugin {
 		return false;
 	}
 
+	public boolean isRegistered(String playerName) {
+		for (String player : registered) {
+			if (player.compareToIgnoreCase(playerName) == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public String getKickMessage() {
 		return kickMessage;
+	}
+
+	public String getKickMessageRegistered() {
+		return kickMessageRegistered;
 	}
 
 	public String getFormatedAllowList() {
